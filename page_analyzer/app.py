@@ -2,9 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import psycopg2
 import os
 from dotenv import load_dotenv
-from urllib.parse import urlparse
 import validators
-from datetime import datetime
 
 load_dotenv()
 
@@ -29,7 +27,7 @@ def urls():
 
     # Преобразование строк в объекты
     urls = [{'id': url[0], 'name': url[1], 'created_at': url[2]} for url in urls]
-    
+
     return render_template('urls.html', urls=urls)
 
 
@@ -47,11 +45,6 @@ def url_detail(id):
 
     url = {'id': url[0], 'name': url[1], 'created_at': url[2]}
     return render_template('url_detail.html', url=url)
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
