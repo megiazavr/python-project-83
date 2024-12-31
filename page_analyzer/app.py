@@ -39,7 +39,19 @@ def create_check(id):
 def urls():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM urls ORDER BY created_at DESC')
+
+    cur.execute('''
+        SELECT 
+            urls.id, 
+            urls.name, 
+            urls.created_at, 
+            COALESCE(MAX(url_checks.created_at), NULL) AS last_check_date,
+            COALESCE(MAX(url_checks.status_code), NULL) AS last_status_code
+        FROM urls
+        LEFT JOIN url_checks ON urls.id = url_checks.url_id
+        GROUP BY urls.id
+        ORDER BY urls.created_at DESC
+    ''')
     urls = cur.fetchall()
     cur.close()
     conn.close()
