@@ -32,7 +32,7 @@ def create_check(id):
     connection.close()
 
     flash('Проверка добавлена!', 'success')
-    return redirect(url_for('show_url, id=id)
+    return redirect(url_for('show_url, id=id))
 
 
 @app.route('/urls')
