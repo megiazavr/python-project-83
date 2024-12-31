@@ -5,3 +5,12 @@ CREATE TABLE IF NOT EXISTS urls (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXIST url_checks (
+    id SERIAL PRIMARY KEY,
+    url_id INTEGER NOT NULL REFERENCE urls (id) ON DELETE CASCADE,
+    status_code INTEGER,
+    h1 TEXT,
+    title TEXT,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
