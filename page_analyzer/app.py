@@ -3,7 +3,7 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 import validators
-from datetime omport datetime
+from datetime import datetime
 
 load_dotenv()
 
@@ -32,7 +32,7 @@ def create_check(id):
     connection.close()
 
     flash('Проверка добавлена!', 'success')
-    return redirect(url_for('show_url, id=id))
+    return redirect(url_for('show_url', id=id))
 
 
 @app.route('/urls')
