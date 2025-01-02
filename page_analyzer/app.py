@@ -3,177 +3,122 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 import validators
+import requests
 from datetime import datetime
 
+# Загрузка переменных окружения
 load_dotenv()
 
+# Инициализация Flask-приложения
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def get_db_connection():
-    DATABASE_URL = os.getenv('DATABASE_URL')
-    connection = psycopg2.connect(DATABASE_URL)
-    return connection
+    """Создает соединение с базой данных."""
+    return psycopg2.connect(DATABASE_URL)
 
 
-@app.route('/urls/<int:id>/checks', methods=['POST'])
-def create_check(id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    created_at = datetime.now()
-    cursor.execute(
-        'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s) RETURNING id;',
-        (id, created_at)
-    )
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-    flash('Проверка добавлена!', 'success')
-    return redirect(url_for('create_check', id=id))
+@app.route('/')
+def index():
+    """Рендеринг главной страницы."""
+    return render_template('index.html')
 
 
-@app.route('/urls')
+@app.route('/urls', methods=['GET', 'POST'])
 def urls():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cursor.execute('''
-        SELECT id, created_at
-        FROM url_checks
-        WHERE url_id = %s
-        ORDER BY created_at DESC
-    ''', (id,))
+    """Добавление и отображение списка URL."""
+    if request.method == 'POST':
+        url = request.form.get('url')
 
-    urls = cur.fetchall()
-    cur.close()
-    conn.close()
+        if not validators.url(url):
+            flash('Некорректный URL. Введите корректный адрес.', 'error')
+            return redirect(url_for('index'))
 
-    # Преобразование строк в объекты
-    urls = [{'id': url[0], 'name': url[1], 'created_at': url[2]} for url in urls]
+        normalized_url = url.lower()
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        'INSERT INTO urls (name) VALUES (%s) RETURNING id;',
+                        (normalized_url,)
+                    )
+                    conn.commit()
+                    url_id = cursor.fetchone()[0]
+            flash('URL успешно добавлен!', 'success')
+            return redirect(url_for('show_url', id=url_id))
+        except psycopg2.errors.UniqueViolation:
+            flash('URL уже существует!', 'info')
+            return redirect(url_for('index'))
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT u.id, u.name, MAX(c.created_at) AS last_check,
+                       MAX(c.status_code) AS last_status
+                FROM urls u
+                LEFT JOIN url_checks c ON u.id = c.url_id
+                GROUP BY u.id
+                ORDER BY u.created_at DESC;
+            ''')
+            urls = cursor.fetchall()
 
     return render_template('urls.html', urls=urls)
 
 
 @app.route('/urls/<int:id>')
-def url_details(id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
-    url = cur.fetchone()
-    cur.close()
-    conn.close()
-
-    if url is None:
-        return 'URL not found', 404
-
-    url = {'id': url[0], 'name': url[1], 'created_at': url[2]}
-    return render_template('url_details.html', url=url)
-
-
-@app.route('/urls')
-def list_urls():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    
-    # Получаем список URL
-    cursor.execute('SELECT * FROM urls ORDER BY created_at DESC;')
-    urls = cursor.fetchall()
-    
-    # Получаем дату последней проверки для каждого URL
-    cursor.execute('''
-        SELECT url_id, MAX(created_at) AS last_check
-        FROM url_checks
-        GROUP BY url_id;
-    ''')
-    checks = {row[0]: row[1] for row in cursor.fetchall()}
-    
-    connection.close()
-    return render_template('urls.html', urls=urls, checks=checks)
-
-
-@app.route('/urls/<int:id>')
 def show_url(id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    
-    # Получаем данные о конкретном URL
-    cursor.execute('SELECT * FROM urls WHERE id = %s;', (id,))
-    url = cursor.fetchone()
-    
-    # Получаем все проверки для этого URL
-    cursor.execute('SELECT id, created_at FROM url_checks WHERE url_id = %s ORDER BY 
-created_at DESC;', (id,))
-    checks = cursor.fetchall()
-    
-    connection.close()
+    """Отображение деталей конкретного URL и его проверок."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT * FROM urls WHERE id = %s;', (id,))
+            url = cursor.fetchone()
+
+            if not url:
+                flash('URL не найден.', 'error')
+                return redirect(url_for('urls'))
+
+            cursor.execute('''
+                SELECT id, status_code, created_at
+                FROM url_checks
+                WHERE url_id = %s
+                ORDER BY created_at DESC;
+            ''', (id,))
+            checks = cursor.fetchall()
+
     return render_template('url_details.html', url=url, checks=checks)
 
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def check_url(id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
+    """Добавление проверки для URL."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT name FROM urls WHERE id = %s;', (id,))
+            url = cursor.fetchone()
 
-    # Получаем URL из базы данных
-    cursor.execute('SELECT name FROM urls WHERE id = %s', (id,))
-    url = cursor.fetchone()
+            if not url:
+                flash('URL не найден.', 'error')
+                return redirect(url_for('urls'))
 
-    if not url:
-        flash('URL не найден', 'danger')
-        return redirect(url_for('show_url', id=id))
+            try:
+                response = requests.get(url[0], timeout=10)
+                status_code = response.status_code
+                created_at = datetime.now()
 
-    try:
-        # Выполняем запрос к сайту
-        response = requests.get(url[0], timeout=10)
-        response.raise_for_status()
+                cursor.execute('''
+                    INSERT INTO url_checks (url_id, status_code, created_at)
+                    VALUES (%s, %s, %s);
+                ''', (id, status_code, created_at))
+                conn.commit()
 
-        # Извлекаем данные для проверки
-        status_code = response.status_code
-
-        # Добавляем данные проверки в базу данных
-        cursor.execute('''
-            INSERT INTO url_checks (url_id, status_code, created_at)
-            VALUES (%s, %s, NOW())
-        ''', (id, status_code))
-
-        connection.commit()
-        flash('Проверка выполнена успешно!', 'success')
-
-    except requests.RequestException as e:
-        # Обрабатываем ошибки запросов
-        flash(f'Произошла ошибка при проверке: {str(e)}', 'danger')
-
-    finally:
-        connection.close()
+                flash('Проверка выполнена успешно!', 'success')
+            except requests.RequestException as e:
+                flash(f'Произошла ошибка при проверке: {e}', 'error')
 
     return redirect(url_for('show_url', id=id))
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        url = request.form['url']
-
-        # Валидация URL
-        if not validators.url(url):
-            flash('Invalid URL. Please enter a valid URL.', 'error')
-            return redirect(url_for('index'))
-
-        # Сохранение в базу данных
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('INSERT INTO urls (name) VALUES (%s)', (url,))
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        flash('URL added successfully!', 'success')
-        return redirect(url_for('index'))
-    return render_template('index.html')
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
