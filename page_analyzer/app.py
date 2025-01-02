@@ -40,7 +40,13 @@ def urls():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    cursor.execute('SELECT id, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (id,))
+    cursor.execute('''
+        SELECT id, created_at
+        FROM url_checks
+        WHERE url_id = %s
+        ORDER BY created_at DESC
+    ''', (id,))
+
     urls = cur.fetchall()
     cur.close()
     conn.close()
