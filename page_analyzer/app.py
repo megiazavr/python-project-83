@@ -32,26 +32,15 @@ def create_check(id):
     connection.close()
 
     flash('Проверка добавлена!', 'success')
-    return redirect(url_for('show_url', id=id))
+    return redirect(url_for('create_check', id=id))
 
 
 @app.route('/urls')
 def urls():
     conn = get_db_connection()
     cur = conn.cursor()
-
-    cur.execute('''
-        SELECT 
-            urls.id, 
-            urls.name, 
-            urls.created_at, 
-            COALESCE(MAX(url_checks.created_at), NULL) AS last_check_date,
-            COALESCE(MAX(url_checks.status_code), NULL) AS last_status_code
-        FROM urls
-        LEFT JOIN url_checks ON urls.id = url_checks.url_id
-        GROUP BY urls.id
-        ORDER BY urls.created_at DESC
-    ''')
+    
+    cursor.execute('SELECT id, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC', (id,))
     urls = cur.fetchall()
     cur.close()
     conn.close()
