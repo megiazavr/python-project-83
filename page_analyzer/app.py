@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import validators
 import requests
 from datetime import datetime
-from bs4 import BeautifulSoup
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -89,7 +88,7 @@ def show_url(id):
 
 @app.route('/urls/<int:id>/checks', methods=['POST'])
 def check_url(id):
-    # URL проверка
+    #URL проверка
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute('SELECT name FROM urls WHERE id = %s;', (id,))
@@ -101,6 +100,7 @@ def check_url(id):
 
             try:
                 response = requests.get(url[0], timeout=10)
+                status_code = response.status_code
                 created_at = datetime.now()
 
                 # Парсинг HTML с помощью BeautifulSoup
@@ -114,14 +114,15 @@ def check_url(id):
                 if meta_description:
                     description = meta_description.get('content')
 
-                cursor.execute('''
-                    INSERT INTO url_checks (url_id, status_code, created_at, h1, title, description)
-                    VALUES (%s, %s, NOW(),  %s, %s, %s);
-                ''', (id, response.status_code, h1, title, description, created_at))
+                 cursor.execute('''
+                     INSERT INTO url_checks (url_id, status_code, created_at, h1, title, 
+description)
+                     VALUES (%s, %s, NOW(),  %s, %s, %s);
+                 ''', (id, response.status_code, h1, title, description,  created_at))
+               
+                 conn.commit()
 
-                conn.commit()
-
-                flash('Проверка выполнена успешно!', 'success')
+                 flash('Проверка выполнена успешно!', 'success')
 
             except requests.RequestException as e:
                 flash(f'Произошла ошибка при проверке: {e}', 'error')
