@@ -1,4 +1,4 @@
-#!/Users/megi/python-project-83/venv/bin/python
+#!/Users/megi/python-project-83/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys
