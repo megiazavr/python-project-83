@@ -13,7 +13,3 @@ gunicorn = "^20.1.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[head]
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+Knujsl5+5hb7OeA4XH6FI3vVf/3bRYeP3P3RTcbGH2+nb6" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENmLQvAq4U5dJaaRWBtt38STHNNFY46k6Ym2tv3B1nLjUOLO21FyL2Q3U92QRwg1" crossorigin="anonymous"></script>
