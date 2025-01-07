@@ -114,7 +114,7 @@ def check_url(id):
                 if meta_description:
                     description = meta_description.get('content')
 
-                 cursor.execute('''
+                cursor.execute('''
                      INSERT INTO url_checks (url_id, status_code, created_at, h1, title, 
 description)
                      VALUES (%s, %s, NOW(),  %s, %s, %s);
