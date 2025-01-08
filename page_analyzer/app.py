@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 import validators
 import requests
-from datetime import datetime
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
@@ -165,4 +164,3 @@ def internal_server_error(e):
 # Запуск приложения
 if __name__ == '__main__':
     app.run(debug=True)
-
