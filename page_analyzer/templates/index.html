@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная страница</title>
-    <!-- Подключение Bootstrap через CDN -->
+    # Подключение Bootstrap через CDN
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Навигационная панель -->
+    # Навигационная панель
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Мой Сервис</a>
@@ -31,12 +31,12 @@
         </div>
     </nav>
 
-    <!-- Контент страницы -->
+    # Контент страницы
     <div class="container mt-5">
         <h1>Добро пожаловать на наш сервис!</h1>
         <p>Этот сервис поможет вам легко проходить тесты.</p>
 
-        <!-- Форма для ввода URL -->
+        # Форма для ввода URL
         <form action="/add_url" method="POST">
             <div class="mb-3">
                 <label for="url" class="form-label">Введите URL</label>
@@ -45,7 +45,7 @@
             <button type="submit" class="btn btn-primary">Добавить URL</button>
         </form>
 
-        <!-- Блок для вывода флеш-сообщений -->
+        # Блок для вывода флеш-сообщений
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <div class="alert alert-success mt-3">
@@ -59,8 +59,7 @@
         {% endwith %}
     </div>
 
-    <!-- Подключение скриптов Bootstrap -->
+    # Подключение скриптов Bootstrap
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

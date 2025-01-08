@@ -17,12 +17,12 @@ rel="stylesheet">
             <p><strong>Created At:</strong> {{ url[2] }}</p>
         </div>
 
-        <!-- Форма для добавления проверки -->
+        # Форма для добавления проверки
         <form action="{{ url_for('create_check', id=url[0]) }}" method="POST">
             <button type="submit" class="btn btn-primary">Добавить проверку</button>
         </form>
 
-        <!-- Таблица для отображения проверок -->
+        # Таблица для отображения проверок
         <h2 class="mt-5">Проверки</h2>
         <table class="table mt-3" data-test="checks">
             <thead>
@@ -49,4 +49,3 @@ rel="stylesheet">
     </div>
 </body>
 </html>
-
