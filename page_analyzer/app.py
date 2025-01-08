@@ -106,7 +106,7 @@ def check_url(id):
                 # Парсинг HTML с помощью BeautifulSoup
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Извлекаем данные для SEO
+                # Извлекаем данные для SEO
                 h1 = soup.find('h1').get_text() if soup.find('h1') else None
                 title = soup.title.string if soup.title else None
                 description = None
@@ -115,9 +115,9 @@ def check_url(id):
                     description = meta_description.get('content')
 
                 cursor.execute('''
-                     INSERT INTO url_checks (url_id, status_code, created_at, h1, title, description)
-                     VALUES (%s, %s, NOW(),  %s, %s, %s);
-                 ''', (id, response.status_code, h1, title, description, created_at))
+                    INSERT INTO url_checks (url_id, status_code, created_at, h1, title, description)
+                    VALUES (%s, %s, NOW(), %s, %s, %s);
+                ''', (id, response.status_code, h1, title, description))
                 conn.commit()
 
                 flash('Проверка выполнена успешно!', 'success')
