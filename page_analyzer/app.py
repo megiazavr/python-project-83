@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import validators
 import requests
 from datetime import datetime
-import BeautifulSoup
+from bs4 import BeautifulSoup
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -118,7 +118,6 @@ def check_url(id):
                      INSERT INTO url_checks (url_id, status_code, created_at, h1, title, description)
                      VALUES (%s, %s, NOW(),  %s, %s, %s);
                  ''', (id, response.status_code, h1, title, description, created_at))
-
                 conn.commit()
 
                 flash('Проверка выполнена успешно!', 'success')
